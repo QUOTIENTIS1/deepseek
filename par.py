@@ -12,7 +12,7 @@ if "user_data" not in st.session_state:
         "messages": [],
         "client": InferenceClient(
             model="deepseek-ai/DeepSeek-R1-0528",
-            token=st.secrets["HF_TOKEN"]  # Using Streamlit secrets
+            token=st.secrets["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"]  # Using Streamlit secrets
         )
     }
 
