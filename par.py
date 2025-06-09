@@ -11,9 +11,8 @@ if "user_data" not in st.session_state:
         "gender": None,
         "messages": [],
         "client": InferenceClient(
-            provider="hyperbolic",
-            api_key="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",  # Replace with your token
-            model="deepseek-ai/DeepSeek-R1-0528"
+            model="deepseek-ai/DeepSeek-R1-0528",
+            token=st.secrets["HF_TOKEN"]  # Using Streamlit secrets
         )
     }
 
@@ -56,28 +55,25 @@ def show_gender_selection():
 
     st.markdown('<p class="gender-title">🤖 Please select your gender :)</p>', unsafe_allow_html=True)
 
-    male_anim = CUSTOM_MALE
-    female_anim = FEMALE_ANIM
-
     col1, col2 = st.columns(2)
     with col1:
         with st.container():
-            st_lottie(male_anim, height=200, key="male_anim")
+            st_lottie(CUSTOM_MALE, height=200, key="male_anim")
             if st.button("Male", key="male_btn"):
                 st.session_state.user_data["gender"] = "male"
                 st.rerun()
 
     with col2:
         with st.container():
-            st_lottie(female_anim, height=200, key="female_anim")
+            st_lottie(FEMALE_ANIM, height=200, key="female_anim")
             if st.button("Female", key="female_btn"):
                 st.session_state.user_data["gender"] = "female"
                 st.rerun()
 
-# --- 4. Chatbot Functionality with DeepSeek ---
+# --- 4. Chatbot Functionality ---
 def response_generator(prompt):
     try:
-        # Prepare message history with system context
+        # Prepare message history
         messages = [
             {
                 "role": "system",
@@ -85,27 +81,26 @@ def response_generator(prompt):
             }
         ]
         
-        # Add previous conversation history
+        # Add previous messages
         for msg in st.session_state.user_data["messages"]:
             messages.append({
                 "role": msg["role"],
                 "content": msg["content"]
             })
         
-        # Add the new user message
+        # Add new user message
         messages.append({
             "role": "user",
             "content": prompt
         })
         
         # Get streaming response
-        completion = st.session_state.user_data["client"].chat.completions.create(
-            model="deepseek-ai/DeepSeek-R1-0528",
+        completion = st.session_state.user_data["client"].chat_completion(
             messages=messages,
             stream=True
         )
         
-        # Stream the response chunks
+        # Stream the response
         full_response = ""
         for chunk in completion:
             if chunk.choices and chunk.choices[0].delta.content:
@@ -116,7 +111,6 @@ def response_generator(prompt):
     except Exception as e:
         error_msg = f"🚫 Error: {str(e)}"
         yield error_msg
-        full_response = error_msg
 
 # --- 5. Main App Flow ---
 if not st.session_state.user_data["gender"]:
