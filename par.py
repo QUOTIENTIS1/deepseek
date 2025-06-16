@@ -12,7 +12,7 @@ if "user_data" not in st.session_state:
         "messages": [],
         "client": InferenceClient(
             model="deepseek-ai/DeepSeek-R1-0528",
-            token=st.secrets["HF_TOKEN"]  # Using Streamlit secrets
+            token=st.secrets["HUGGINGFACE_API_TOKEN"]  # Correct secret reference
         )
     }
 
@@ -21,15 +21,20 @@ def load_lottie(url):
     try:
         r = requests.get(url, timeout=5)
         return r.json() if r.status_code == 200 else None
-    except:
+    except Exception as e:
+        st.error(f"Animation load error: {str(e)}")
         return None
 
 # Load animations from local files
-with open("Animation - 1749395326494.json", "r") as f:
-    FEMALE_ANIM = json.load(f)
+try:
+    with open("Animation - 1749395326494.json", "r") as f:
+        FEMALE_ANIM = json.load(f)
 
-with open("Animation - 1749394556693.json", "r") as f:
-    CUSTOM_MALE = json.load(f)
+    with open("Animation - 1749394556693.json", "r") as f:
+        CUSTOM_MALE = json.load(f)
+except Exception as e:
+    st.error(f"Failed to load animations: {str(e)}")
+    st.stop()
 
 # --- 3. Gender Selection UI ---
 def show_gender_selection():
@@ -110,6 +115,7 @@ def response_generator(prompt):
                 
     except Exception as e:
         error_msg = f"🚫 Error: {str(e)}"
+        st.error(error_msg)  # Show error in UI
         yield error_msg
 
 # --- 5. Main App Flow ---
@@ -139,3 +145,4 @@ else:
             
         # Add assistant response to history
         st.session_state.user_data["messages"].append({"role": "assistant", "content": response})
+        
